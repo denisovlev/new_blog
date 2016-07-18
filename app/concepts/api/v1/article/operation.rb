@@ -5,20 +5,16 @@ module Api::V1
       include Model
       model ::Article, :find
 
-      include Trailblazer::Operation::Representer
-      representer do
-        property :id
-        property :title
-        property :body
-      end
+      extend Trailblazer::Operation::Representer::DSL
+      include Trailblazer::Operation::Representer::Rendering
+      representer Api::V1::Article::Representer::Show
 
       def process(*)
       end
 
     end
 
-    class Create < Trailblazer::Operation
-      include Model
+    class Create < Show
       model ::Article, :create
 
       contract do
@@ -29,17 +25,24 @@ module Api::V1
         validates :body, presence: true, length: {maximum: 1000}
       end
 
-      include Trailblazer::Operation::Representer
-      representer do
-        property :id
-      end
-
       def process(params)
-        validate(params[:article]) do |f|
+        validate(params['article']) do |f|
           f.save
         end
       end
 
     end
+
+    class Update < Create
+      include Model
+      model ::Article, :update
+    end
+
+    class Delete < Show
+      def process(*)
+        model.destroy
+      end
+    end
+
   end
 end

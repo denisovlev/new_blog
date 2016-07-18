@@ -3,17 +3,17 @@ require 'rails_helper'
 RSpec.describe 'users', :type => :request do
   let(:headers) {
     {
-        "ACCEPT" => "application/json",     # This is what Rails 4 accepts
-        "HTTP_ACCEPT" => "application/json" # This is what Rails 3 accepts
+        "ACCEPT" => "application/json",
+        "HTTP_ACCEPT" => "application/json"
     }
   }
 
   let(:user_params) {
     {
-        user: {
-            email: 'example@example.com',
-            password: '123456',
-            password_confirmation: '123456'
+        'user' => {
+            'email' => 'example@example.com',
+            'password' => '123456',
+            'password_confirmation' => '123456'
         }
     }
   }
@@ -24,7 +24,8 @@ RSpec.describe 'users', :type => :request do
 
     expect(response.status).to eq(201)
     expect(response.content_type).to eq('application/json')
-    expect(response.body).to eq({}.to_json)
+    expected_hash = {'id' => User.last.id.to_s, 'email' => user_params['user']['email']}
+    expect(json).to eq(expected_hash)
   end
 
   it 'show nonexistent' do
@@ -35,11 +36,12 @@ RSpec.describe 'users', :type => :request do
   end
 
   it 'show existent' do
-    res, op = Api::V1::User::Create.run(user_params)
+    op = Api::V1::User::Create.(user_params)
     get "/api/v1/users/#{op.model.id}", headers: headers
     expect(response.status).to eq(200)
     expect(response.content_type).to eq('application/json')
-    expect(response.body).to eq({id: User.last.id, email: 'example@example.com'}.to_json)
+    expected_hash = {'id' => User.last.id.to_s, 'email' => user_params['user']['email']}
+    expect(json).to eq(expected_hash)
   end
 
 end

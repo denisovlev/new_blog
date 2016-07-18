@@ -5,7 +5,10 @@ module Api::V1
     end
 
     def create
-      render json: Api::V1::User::Create.(params), status: :created
+      op = run Api::V1::User::Create do |op|
+        return render json: op, status: :created
+      end
+      api_error(status: :unprocessable_entity, errors: op.errors.messages)
     end
 
   end

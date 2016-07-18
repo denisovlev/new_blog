@@ -4,20 +4,16 @@ module Api::V1
       include Model
       model ::User, :find
 
-      include Trailblazer::Operation::Representer
-
-      representer do
-        property :id
-        property :email
-      end
+      extend Trailblazer::Operation::Representer::DSL
+      include Trailblazer::Operation::Representer::Rendering
+      representer Api::V1::User::Representer::Show
 
       def process(*)
       end
 
     end
 
-    class Create < Trailblazer::Operation
-      include Model
+    class Create < Show
       model ::User, :create
 
       contract do
@@ -25,6 +21,8 @@ module Api::V1
         property :password, virtual: true
         property :password_confirmation, virtual: true
 
+        validates :email, presence: true
+        validates :password, presence: true, length: {minimum: 6}
         validate :password_ok?
 
         def password_ok?
@@ -35,7 +33,7 @@ module Api::V1
       end
 
       def process(params)
-        validate(params[:user]) do |f|
+        validate(params['user']) do |f|
           create!
           f.save
         end
@@ -48,6 +46,10 @@ module Api::V1
         auth.sync
       end
 
+    end
+
+    class Update < Create
+      model ::User, :update
     end
 
   end

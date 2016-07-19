@@ -9,6 +9,9 @@ module Api::V1
       include Trailblazer::Operation::Representer::Rendering
       representer Api::V1::Article::Representer::Show
 
+      include Policy
+      policy Api::V1::ApplicationPolicy, :show?
+
       def process(*)
       end
 
@@ -16,6 +19,8 @@ module Api::V1
 
     class Create < Show
       model ::Article, :create
+
+      policy Api::V1::ApplicationPolicy, :create?
 
       contract do
         property :title
@@ -26,6 +31,7 @@ module Api::V1
       end
 
       def process(params)
+        model.user = params[:current_user]
         validate(params['article']) do |f|
           f.save
         end
@@ -36,9 +42,19 @@ module Api::V1
     class Update < Create
       include Model
       model ::Article, :update
+
+      policy Api::V1::ApplicationPolicy, :update?
+
+      def process(params)
+        validate(params['article']) do |f|
+          f.save
+        end
+      end
     end
 
     class Delete < Show
+      policy Api::V1::ApplicationPolicy, :delete?
+
       def process(*)
         model.destroy
       end

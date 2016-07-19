@@ -1,9 +1,5 @@
 require 'rails_helper'
 
-def create_user
-  Api::V1::User::Create.({'user' => {'email' => 'user@example.com', 'password' => '123456', 'password_confirmation' => '123456'}})
-end
-
 RSpec.describe Api::V1::User::Show do
 
   it 'shows' do
@@ -27,20 +23,41 @@ RSpec.describe Api::V1::User::Create do
     model = User.last
     expect(model.id).to eq(op.model.id)
     expect(model.email).to eq('user@example.com')
+    expect(model.authentication_token).to_not be_empty
+  end
+
+  it 'unique validation' do
+    create_user
+    expect {create_user}.to raise_error(Trailblazer::Operation::InvalidContract)
   end
 
 end
 
-RSpec.describe Api::V1::User::Update do
+RSpec.describe Api::V1::User::SignIn do
 
-  it 'updates' do
+  it 'signs in' do
     op = create_user
-    Api::V1::User::Update.({
-        id: op.model.id,
-        'user' => {'email' => 'hacked@mail', 'password' => '999999', 'password_confirmation' => '999999'}
-    })
+    res, op2 = Api::V1::User::SignIn.run({'user' => {'email' => 'user@example.com', 'password' => '123456'}})
 
-    expect(User.last.email).to eq('hacked@mail')
+    expect(res).to be_truthy
+    output = JSON.parse(op2.to_json)
+    expect(output['email']).to eq('user@example.com')
+    expect(output['authentication_token']).to eq(op.model.authentication_token)
+    expect(output['password']).to be_blank
+  end
+
+  it 'failed sign in' do
+    op = create_user
+    res, op2 = Api::V1::User::SignIn.run({'user' => {'email' => 'user@example.com', 'password' => '1234567'}})
+
+    expect(res).to be_falsey
+  end
+
+  it 'failed sign no user' do
+    op = create_user
+    res, op2 = Api::V1::User::SignIn.run({'user' => {'email' => 'user123@example.com', 'password' => '1234567'}})
+
+    expect(res).to be_falsey
   end
 
 end

@@ -21,3 +21,11 @@
 
 en:
   hello: "Hello world"
+
+  activemodel:
+    errors:
+      models:
+        user:
+          attributes:
+            email:
+              taken: 'Email is already taken'

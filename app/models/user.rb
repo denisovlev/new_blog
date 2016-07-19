@@ -3,4 +3,8 @@ class User
 
   field :email, type: String
   field :auth_meta_data, type: Hash
+  field :authentication_token, type: String
+  field :is_admin, type: Boolean, default: false
+
+  has_many :articles
 end

@@ -11,5 +11,12 @@ module Api::V1
       api_error(status: :unprocessable_entity, errors: op.errors.messages)
     end
 
+    def sign_in
+      op = run Api::V1::User::SignIn do |op|
+        return render json: op, status: :created
+      end
+      api_error(status: :unprocessable_entity, errors: op.errors.messages)
+    end
+
   end
 end

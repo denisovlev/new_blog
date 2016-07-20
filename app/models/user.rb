@@ -7,4 +7,5 @@ class User
   field :is_admin, type: Boolean, default: false
 
   has_many :articles
+  has_many :comments
 end

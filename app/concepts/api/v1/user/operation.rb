@@ -40,6 +40,7 @@ module Api::V1
       end
 
       def process(params)
+        contract.prepopulate!
         validate(params['user']) do |f|
           create!
           generate_authentication_token!
@@ -59,6 +60,12 @@ module Api::V1
           authentication_token = SecureRandom.base64(64)
           contract.authentication_token = authentication_token
           break unless ::User.where(authentication_token: authentication_token).first.present?
+        end
+      end
+
+      class Admin < self
+        contract do
+          property :is_admin, prepopulator: -> (*) { self.is_admin = true }
         end
       end
 

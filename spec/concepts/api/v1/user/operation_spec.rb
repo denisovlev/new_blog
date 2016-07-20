@@ -24,11 +24,26 @@ RSpec.describe Api::V1::User::Create do
     expect(model.id).to eq(op.model.id)
     expect(model.email).to eq('user@example.com')
     expect(model.authentication_token).to_not be_empty
+    expect(model.is_admin).to be_falsey
   end
 
   it 'unique validation' do
     create_user
     expect {create_user}.to raise_error(Trailblazer::Operation::InvalidContract)
+  end
+
+  describe Api::V1::User::Create::Admin do
+
+    it 'creates' do
+      op = create_user_admin
+
+      model = User.last
+      expect(model.id).to eq(op.model.id)
+      expect(model.email).to eq('admin@example.com')
+      expect(model.authentication_token).to_not be_empty
+      expect(model.is_admin).to be_truthy
+    end
+
   end
 
 end

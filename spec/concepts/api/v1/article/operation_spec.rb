@@ -35,10 +35,7 @@ RSpec.describe Api::V1::Article::Update do
 
   it 'updates article' do
     user = create_user.model
-    user2 = create_user({'email' => 'new@example.com'}).model
-    # TODO: create as admin
-    user2.is_admin = true
-    user2.save
+    user2 = create_user_admin.model
     op = create_article(user)
     op2 = Api::V1::Article::Update.({
         id: op.model.id.to_s,

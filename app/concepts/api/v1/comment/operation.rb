@@ -1,5 +1,5 @@
 module Api::V1
-  module Article
+  module Comment
 
     class Index < Trailblazer::Operation
       include Collection
@@ -7,21 +7,21 @@ module Api::V1
       extend Trailblazer::Operation::Representer::DSL
       include Trailblazer::Operation::Representer::Rendering
       representer do
-        collection :to_a, as: :articles, embedded: true, decorator: Api::V1::Article::Representer::Show
+        collection :to_a, as: :comments, embedded: true, decorator: Api::V1::Comment::Representer::Show
       end
 
       def model!(params)
-        ::Article.all
+        ::Comment.where(article_id: params[:article_id])
       end
     end
 
     class Show < Trailblazer::Operation
       include Model
-      model ::Article, :find
+      model ::Comment, :find
 
       extend Trailblazer::Operation::Representer::DSL
       include Trailblazer::Operation::Representer::Rendering
-      representer Api::V1::Article::Representer::Show
+      representer Api::V1::Comment::Representer::Show
 
       include Policy
       policy Api::V1::ApplicationPolicy, :show?
@@ -32,35 +32,39 @@ module Api::V1
     end
 
     class Create < Show
-      model ::Article, :create
+      model ::Comment, :create
 
       policy Api::V1::ApplicationPolicy, :create?
 
       contract do
-        property :title
         property :body
 
-        validates :title, presence: true, length: {minimum: 10, maximum: 100}
+        property :article, populator: ->(fragment:, **) {
+          article ? article : self.article = ::Article.find(fragment)
+        }
+
         validates :body, presence: true, length: {maximum: 1000}
+        validates :article, presence: true
       end
 
       def process(params)
-        validate(params['article']) do |f|
+        comment_params = params['comment']
+        comment_params['article'] = params[:article_id]
+        validate(comment_params) do |f|
           model.user = params[:current_user]
           f.save
         end
       end
-
     end
 
     class Update < Create
       include Model
-      model ::Article, :update
+      model ::Comment, :update
 
       policy Api::V1::ApplicationPolicy, :update?
 
       def process(params)
-        validate(params['article']) do |f|
+        validate(params['comment']) do |f|
           f.save
         end
       end

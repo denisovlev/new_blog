@@ -7,6 +7,10 @@ module Api::V1
       @model = model
     end
 
+    def index?
+      true
+    end
+
     def show?
       true
     end
